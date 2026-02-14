@@ -380,106 +380,6 @@
     clip-path: inset(50% 0 0 0);
   }
 
-  /* Setup screen */
-  .setup-screen {
-    position: relative;
-    z-index: 1;
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 20px 16px;
-  }
-
-  .setup-screen h2 {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 12px;
-    color: var(--neon-blue);
-    text-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
-    margin-bottom: 16px;
-    text-align: center;
-  }
-
-  .setup-screen .step {
-    background: var(--card-bg);
-    border: 1px solid rgba(176, 38, 255, 0.25);
-    border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 12px;
-  }
-
-  .setup-screen .step-num {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 10px;
-    color: var(--neon-pink);
-    margin-bottom: 8px;
-  }
-
-  .setup-screen .step p {
-    font-size: 14px;
-    line-height: 1.6;
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  .setup-screen .step code {
-    background: rgba(176, 38, 255, 0.15);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 12px;
-    color: var(--neon-yellow);
-  }
-
-  .setup-screen textarea {
-    width: 100%;
-    min-height: 160px;
-    background: rgba(10, 0, 30, 0.9);
-    border: 2px solid rgba(176, 38, 255, 0.4);
-    border-radius: 8px;
-    color: var(--neon-yellow);
-    font-family: monospace;
-    font-size: 12px;
-    padding: 12px;
-    resize: vertical;
-    margin-top: 8px;
-  }
-
-  .setup-screen textarea:focus {
-    outline: none;
-    border-color: var(--neon-blue);
-    box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
-  }
-
-  .setup-screen .connect-btn {
-    display: block;
-    width: 100%;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 12px;
-    padding: 16px;
-    border: 2px solid var(--neon-blue);
-    background: rgba(0, 229, 255, 0.1);
-    color: var(--neon-blue);
-    border-radius: 8px;
-    cursor: pointer;
-    margin-top: 16px;
-    letter-spacing: 2px;
-    transition: all 0.2s;
-  }
-
-  .setup-screen .connect-btn:active {
-    transform: scale(0.97);
-  }
-
-  .setup-screen .connect-btn:hover {
-    background: rgba(0, 229, 255, 0.2);
-    box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
-  }
-
-  .setup-error {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 9px;
-    color: var(--neon-pink);
-    text-align: center;
-    margin-top: 12px;
-    display: none;
-  }
 </style>
 </head>
 <body>
@@ -487,53 +387,8 @@
 <div class="sun"></div>
 <canvas id="confetti-canvas"></canvas>
 
-<!-- SETUP SCREEN -->
-<div class="setup-screen" id="setup-screen" style="display:none;">
-  <div class="header">
-    <span class="mountain-emoji">🎿</span>
-    <h1>SKI DAY<br>CHECK-IN</h1>
-    <div class="subtitle">FIRST TIME SETUP</div>
-  </div>
-
-  <h2>CONNECT FIREBASE</h2>
-
-  <div class="step">
-    <div class="step-num">STEP 1</div>
-    <p>Go to <code>console.firebase.google.com</code> and tap <code>Create a project</code>. Name it anything (e.g. "ski-day"). Skip Google Analytics.</p>
-  </div>
-
-  <div class="step">
-    <div class="step-num">STEP 2</div>
-    <p>Once created, tap the web icon <code>&lt;/&gt;</code> to add a web app. Name it anything and tap <code>Register app</code>.</p>
-  </div>
-
-  <div class="step">
-    <div class="step-num">STEP 3</div>
-    <p>You'll see a code block with <code>firebaseConfig</code>. Copy everything between the <code>{</code> curly braces <code>}</code> (including them) and paste below.</p>
-  </div>
-
-  <div class="step">
-    <div class="step-num">STEP 4</div>
-    <p>In the left sidebar tap <code>Build</code> &rarr; <code>Realtime Database</code> &rarr; <code>Create Database</code>. Pick any location. Choose <code>Start in test mode</code>.</p>
-  </div>
-
-  <div class="step">
-    <div class="step-num">PASTE CONFIG</div>
-    <textarea id="config-input" placeholder='{
-  apiKey: "AIza...",
-  authDomain: "ski-day-xxxxx.firebaseapp.com",
-  databaseURL: "https://ski-day-xxxxx-default-rtdb.firebaseio.com",
-  projectId: "ski-day-xxxxx",
-  ...
-}'></textarea>
-  </div>
-
-  <button class="connect-btn" onclick="saveConfig()">CONNECT</button>
-  <div class="setup-error" id="setup-error"></div>
-</div>
-
 <!-- MAIN APP -->
-<div class="container" id="app-screen" style="display:none;">
+<div class="container" id="app-screen">
   <div class="header">
     <span class="mountain-emoji">🎿</span>
     <h1>SKI DAY<br>CHECK-IN</h1>
@@ -568,8 +423,6 @@
 
   <div class="reset-zone">
     <button class="reset-btn" onclick="resetAll()">RESET ALL CHECK-INS</button>
-    <br><br>
-    <button class="reset-btn" onclick="resetConfig()">CHANGE FIREBASE CONFIG</button>
   </div>
 </div>
 
@@ -593,74 +446,24 @@ const ROSTER = [
   { name: "Drew Fink", room: 6 },
 ];
 
-const CONFIG_KEY = "ski-day-firebase-config";
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCCdt5DQQmmh1yyd76Slg9OrPHRk-Hcw8c",
+  authDomain: "check-in-51dc6.firebaseapp.com",
+  databaseURL: "https://check-in-51dc6-default-rtdb.firebaseio.com",
+  projectId: "check-in-51dc6",
+  storageBucket: "check-in-51dc6.firebasestorage.app",
+  messagingSenderId: "490425603803",
+  appId: "1:490425603803:web:5a0c78c9bec4d10a62defe"
+};
+
 let db = null;
 let checkinsRef = null;
 let currentState = {};
 let prevCheckedCount = 0;
 
-// ── Config management ──
-
-function getSavedConfig() {
-  try {
-    const raw = localStorage.getItem(CONFIG_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
-}
-
-function parseConfigInput(raw) {
-  // Clean up the pasted config — handle both JSON and JS object literal formats
-  let cleaned = raw.trim();
-
-  // If they pasted the whole const/var line, extract just the object
-  const objMatch = cleaned.match(/\{[\s\S]*\}/);
-  if (objMatch) cleaned = objMatch[0];
-
-  // Convert JS object literal to valid JSON (unquoted keys → quoted keys)
-  cleaned = cleaned.replace(/([{,]\s*)(\w+)\s*:/g, '$1"$2":');
-  // Single quotes → double quotes for values
-  cleaned = cleaned.replace(/:\s*'([^']*)'/g, ': "$1"');
-  // Remove trailing commas
-  cleaned = cleaned.replace(/,\s*([}\]])/g, '$1');
-
-  const config = JSON.parse(cleaned);
-
-  // Validate required fields
-  if (!config.apiKey || !config.projectId) {
-    throw new Error("Missing apiKey or projectId");
-  }
-
-  return config;
-}
-
-function saveConfig() {
-  const input = document.getElementById("config-input").value;
-  const errorEl = document.getElementById("setup-error");
-
-  try {
-    const config = parseConfigInput(input);
-    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
-    errorEl.style.display = "none";
-    initApp(config);
-  } catch (e) {
-    errorEl.textContent = "INVALID CONFIG — CHECK YOUR PASTE";
-    errorEl.style.display = "block";
-  }
-}
-
-function resetConfig() {
-  if (confirm("Disconnect Firebase and re-enter config?")) {
-    localStorage.removeItem(CONFIG_KEY);
-    location.reload();
-  }
-}
-
 // ── Firebase init ──
 
 function initApp(config) {
-  document.getElementById("setup-screen").style.display = "none";
-  document.getElementById("app-screen").style.display = "block";
-
   // Initialize Firebase
   const app = firebase.initializeApp(config);
   db = firebase.database();
@@ -845,14 +648,7 @@ window.addEventListener("resize", () => {
 
 // ── Boot ──
 
-(function boot() {
-  const config = getSavedConfig();
-  if (config) {
-    initApp(config);
-  } else {
-    document.getElementById("setup-screen").style.display = "block";
-  }
-})();
+initApp(FIREBASE_CONFIG);
 </script>
 </body>
 </html>
