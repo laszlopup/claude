@@ -108,6 +108,30 @@
     98% { opacity: 0.4; }
   }
 
+  /* Connection status */
+  .connection-status {
+    text-align: center;
+    font-size: 10px;
+    padding: 6px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    font-family: 'Press Start 2P', monospace;
+    letter-spacing: 1px;
+  }
+
+  .connection-status.connected {
+    color: var(--checked-in);
+    background: rgba(0, 255, 136, 0.08);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+  }
+
+  .connection-status.disconnected {
+    color: var(--neon-pink);
+    background: rgba(255, 45, 149, 0.08);
+    border: 1px solid rgba(255, 45, 149, 0.2);
+    animation: flicker 2s infinite;
+  }
+
   /* Scoreboard */
   .scoreboard {
     display: flex;
@@ -355,6 +379,107 @@
     );
     clip-path: inset(50% 0 0 0);
   }
+
+  /* Setup screen */
+  .setup-screen {
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px 16px;
+  }
+
+  .setup-screen h2 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: var(--neon-blue);
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  .setup-screen .step {
+    background: var(--card-bg);
+    border: 1px solid rgba(176, 38, 255, 0.25);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .setup-screen .step-num {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: var(--neon-pink);
+    margin-bottom: 8px;
+  }
+
+  .setup-screen .step p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .setup-screen .step code {
+    background: rgba(176, 38, 255, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--neon-yellow);
+  }
+
+  .setup-screen textarea {
+    width: 100%;
+    min-height: 160px;
+    background: rgba(10, 0, 30, 0.9);
+    border: 2px solid rgba(176, 38, 255, 0.4);
+    border-radius: 8px;
+    color: var(--neon-yellow);
+    font-family: monospace;
+    font-size: 12px;
+    padding: 12px;
+    resize: vertical;
+    margin-top: 8px;
+  }
+
+  .setup-screen textarea:focus {
+    outline: none;
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+  }
+
+  .setup-screen .connect-btn {
+    display: block;
+    width: 100%;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    padding: 16px;
+    border: 2px solid var(--neon-blue);
+    background: rgba(0, 229, 255, 0.1);
+    color: var(--neon-blue);
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 16px;
+    letter-spacing: 2px;
+    transition: all 0.2s;
+  }
+
+  .setup-screen .connect-btn:active {
+    transform: scale(0.97);
+  }
+
+  .setup-screen .connect-btn:hover {
+    background: rgba(0, 229, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+  }
+
+  .setup-error {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: var(--neon-pink);
+    text-align: center;
+    margin-top: 12px;
+    display: none;
+  }
 </style>
 </head>
 <body>
@@ -362,12 +487,60 @@
 <div class="sun"></div>
 <canvas id="confetti-canvas"></canvas>
 
-<div class="container">
+<!-- SETUP SCREEN -->
+<div class="setup-screen" id="setup-screen" style="display:none;">
+  <div class="header">
+    <span class="mountain-emoji">🎿</span>
+    <h1>SKI DAY<br>CHECK-IN</h1>
+    <div class="subtitle">FIRST TIME SETUP</div>
+  </div>
+
+  <h2>CONNECT FIREBASE</h2>
+
+  <div class="step">
+    <div class="step-num">STEP 1</div>
+    <p>Go to <code>console.firebase.google.com</code> and tap <code>Create a project</code>. Name it anything (e.g. "ski-day"). Skip Google Analytics.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-num">STEP 2</div>
+    <p>Once created, tap the web icon <code>&lt;/&gt;</code> to add a web app. Name it anything and tap <code>Register app</code>.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-num">STEP 3</div>
+    <p>You'll see a code block with <code>firebaseConfig</code>. Copy everything between the <code>{</code> curly braces <code>}</code> (including them) and paste below.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-num">STEP 4</div>
+    <p>In the left sidebar tap <code>Build</code> &rarr; <code>Realtime Database</code> &rarr; <code>Create Database</code>. Pick any location. Choose <code>Start in test mode</code>.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-num">PASTE CONFIG</div>
+    <textarea id="config-input" placeholder='{
+  apiKey: "AIza...",
+  authDomain: "ski-day-xxxxx.firebaseapp.com",
+  databaseURL: "https://ski-day-xxxxx-default-rtdb.firebaseio.com",
+  projectId: "ski-day-xxxxx",
+  ...
+}'></textarea>
+  </div>
+
+  <button class="connect-btn" onclick="saveConfig()">CONNECT</button>
+  <div class="setup-error" id="setup-error"></div>
+</div>
+
+<!-- MAIN APP -->
+<div class="container" id="app-screen" style="display:none;">
   <div class="header">
     <span class="mountain-emoji">🎿</span>
     <h1>SKI DAY<br>CHECK-IN</h1>
     <div class="subtitle">WAKE UP. GEAR UP. SHRED.</div>
   </div>
+
+  <div class="connection-status connected" id="conn-status">LIVE SYNC</div>
 
   <div class="scoreboard">
     <div class="score-item">
@@ -395,8 +568,14 @@
 
   <div class="reset-zone">
     <button class="reset-btn" onclick="resetAll()">RESET ALL CHECK-INS</button>
+    <br><br>
+    <button class="reset-btn" onclick="resetConfig()">CHANGE FIREBASE CONFIG</button>
   </div>
 </div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 
 <script>
 const ROSTER = [
@@ -414,37 +593,121 @@ const ROSTER = [
   { name: "Drew Fink", room: 6 },
 ];
 
-const STORAGE_KEY = "ski-day-checkins";
+const CONFIG_KEY = "ski-day-firebase-config";
+let db = null;
+let checkinsRef = null;
+let currentState = {};
+let prevCheckedCount = 0;
 
-function loadState() {
+// ── Config management ──
+
+function getSavedConfig() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : {};
-  } catch { return {}; }
+    const raw = localStorage.getItem(CONFIG_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
 }
 
-function saveState(state) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+function parseConfigInput(raw) {
+  // Clean up the pasted config — handle both JSON and JS object literal formats
+  let cleaned = raw.trim();
+
+  // If they pasted the whole const/var line, extract just the object
+  const objMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (objMatch) cleaned = objMatch[0];
+
+  // Convert JS object literal to valid JSON (unquoted keys → quoted keys)
+  cleaned = cleaned.replace(/([{,]\s*)(\w+)\s*:/g, '$1"$2":');
+  // Single quotes → double quotes for values
+  cleaned = cleaned.replace(/:\s*'([^']*)'/g, ': "$1"');
+  // Remove trailing commas
+  cleaned = cleaned.replace(/,\s*([}\]])/g, '$1');
+
+  const config = JSON.parse(cleaned);
+
+  // Validate required fields
+  if (!config.apiKey || !config.projectId) {
+    throw new Error("Missing apiKey or projectId");
+  }
+
+  return config;
 }
 
-function getState() {
-  return loadState();
+function saveConfig() {
+  const input = document.getElementById("config-input").value;
+  const errorEl = document.getElementById("setup-error");
+
+  try {
+    const config = parseConfigInput(input);
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+    errorEl.style.display = "none";
+    initApp(config);
+  } catch (e) {
+    errorEl.textContent = "INVALID CONFIG — CHECK YOUR PASTE";
+    errorEl.style.display = "block";
+  }
 }
+
+function resetConfig() {
+  if (confirm("Disconnect Firebase and re-enter config?")) {
+    localStorage.removeItem(CONFIG_KEY);
+    location.reload();
+  }
+}
+
+// ── Firebase init ──
+
+function initApp(config) {
+  document.getElementById("setup-screen").style.display = "none";
+  document.getElementById("app-screen").style.display = "block";
+
+  // Initialize Firebase
+  const app = firebase.initializeApp(config);
+  db = firebase.database();
+  checkinsRef = db.ref("checkins");
+
+  // Listen for real-time changes
+  checkinsRef.on("value", (snapshot) => {
+    currentState = snapshot.val() || {};
+    render();
+
+    // Fire confetti if someone new pushed us to full
+    const checkedCount = ROSTER.filter(p => currentState[sanitizeKey(p.name)]).length;
+    if (checkedCount === ROSTER.length && prevCheckedCount < ROSTER.length) {
+      launchConfetti();
+    }
+    prevCheckedCount = checkedCount;
+  });
+
+  // Connection status
+  const connRef = db.ref(".info/connected");
+  const statusEl = document.getElementById("conn-status");
+  connRef.on("value", (snap) => {
+    if (snap.val() === true) {
+      statusEl.textContent = "LIVE SYNC";
+      statusEl.className = "connection-status connected";
+    } else {
+      statusEl.textContent = "OFFLINE";
+      statusEl.className = "connection-status disconnected";
+    }
+  });
+}
+
+// Firebase keys can't contain . $ # [ ] /
+function sanitizeKey(name) {
+  return name.replace(/[.$/\[\]#]/g, "_");
+}
+
+// ── Check-in logic ──
 
 function toggleCheckin(name) {
-  const state = getState();
-  if (state[name]) {
-    delete state[name];
-  } else {
-    state[name] = { time: Date.now() };
-  }
-  saveState(state);
-  render();
+  if (!checkinsRef) return;
+  const key = sanitizeKey(name);
 
-  // Check if everyone is checked in
-  const checkedCount = ROSTER.filter(p => state[p.name]).length;
-  if (checkedCount === ROSTER.length) {
-    launchConfetti();
+  if (currentState[key]) {
+    checkinsRef.child(key).remove();
+  } else {
+    checkinsRef.child(key).set({ name: name, time: Date.now() });
   }
 }
 
@@ -458,7 +721,6 @@ function formatTime(ts) {
 }
 
 function render() {
-  const state = getState();
   const rosterEl = document.getElementById("roster");
   const rooms = {};
 
@@ -474,20 +736,23 @@ function render() {
     html += `<div class="room-group">`;
     html += `<div class="room-label">ROOM ${room}</div>`;
     rooms[room].forEach(person => {
-      const isChecked = !!state[person.name];
+      const key = sanitizeKey(person.name);
+      const data = currentState[key];
+      const isChecked = !!data;
       const checkedClass = isChecked ? 'checked-in' : '';
       const icon = isChecked ? '✓' : '💤';
-      const btnText = isChecked ? 'I\'M UP!' : 'CHECK IN';
-      const timeStr = isChecked ? `Checked in at ${formatTime(state[person.name].time)}` : 'Still in bed...';
+      const btnText = isChecked ? "I'M UP!" : 'CHECK IN';
+      const timeStr = isChecked ? `Checked in at ${formatTime(data.time)}` : 'Still in bed...';
+      const escaped = person.name.replace(/'/g, "\\'");
 
       html += `
-        <div class="person-card ${checkedClass}" onclick="toggleCheckin('${person.name.replace(/'/g, "\\'")}')">
+        <div class="person-card ${checkedClass}" onclick="toggleCheckin('${escaped}')">
           <div class="status-icon">${icon}</div>
           <div class="info">
             <div class="name">${person.name}</div>
             <div class="check-time">${timeStr}</div>
           </div>
-          <button class="checkin-btn" onclick="event.stopPropagation(); toggleCheckin('${person.name.replace(/'/g, "\\'")}')">${btnText}</button>
+          <button class="checkin-btn" onclick="event.stopPropagation(); toggleCheckin('${escaped}')">${btnText}</button>
         </div>`;
     });
     html += `</div>`;
@@ -496,7 +761,7 @@ function render() {
   rosterEl.innerHTML = html;
 
   // Update scoreboard
-  const checkedCount = ROSTER.filter(p => state[p.name]).length;
+  const checkedCount = ROSTER.filter(p => currentState[sanitizeKey(p.name)]).length;
   document.getElementById("checked-count").textContent = checkedCount;
   document.getElementById("total-count").textContent = ROSTER.length;
   document.getElementById("remaining-count").textContent = ROSTER.length - checkedCount;
@@ -511,13 +776,14 @@ function render() {
 }
 
 function resetAll() {
+  if (!checkinsRef) return;
   if (confirm("Reset all check-ins? Everyone goes back to bed.")) {
-    localStorage.removeItem(STORAGE_KEY);
-    render();
+    checkinsRef.remove();
   }
 }
 
-// Confetti
+// ── Confetti ──
+
 function launchConfetti() {
   const canvas = document.getElementById("confetti-canvas");
   const ctx = canvas.getContext("2d");
@@ -577,8 +843,16 @@ window.addEventListener("resize", () => {
   canvas.height = window.innerHeight;
 });
 
-// Initial render
-render();
+// ── Boot ──
+
+(function boot() {
+  const config = getSavedConfig();
+  if (config) {
+    initApp(config);
+  } else {
+    document.getElementById("setup-screen").style.display = "block";
+  }
+})();
 </script>
 </body>
 </html>
