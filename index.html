@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>SKI DAY CHECK-IN</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Russo+One&display=swap');
+
+  :root {
+    --neon-pink: #ff2d95;
+    --neon-blue: #00e5ff;
+    --neon-purple: #b026ff;
+    --neon-yellow: #fff200;
+    --dark-bg: #0a0015;
+    --card-bg: rgba(20, 0, 50, 0.85);
+    --checked-in: #00ff88;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Russo One', sans-serif;
+    background: var(--dark-bg);
+    min-height: 100vh;
+    overflow-x: hidden;
+    color: #fff;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      linear-gradient(transparent 0%, rgba(10, 0, 21, 0.8) 100%),
+      linear-gradient(90deg, rgba(176, 38, 255, 0.08) 1px, transparent 1px),
+      linear-gradient(rgba(176, 38, 255, 0.08) 1px, transparent 1px);
+    background-size: 100% 100%, 40px 40px, 40px 40px;
+    animation: gridScroll 8s linear infinite;
+    z-index: 0;
+  }
+
+  @keyframes gridScroll {
+    0% { background-position: 0 0, 0 0, 0 0; }
+    100% { background-position: 0 0, 0 40px, 0 40px; }
+  }
+
+  /* Horizon gradient */
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 40%;
+    background: linear-gradient(to top, rgba(255, 45, 149, 0.15), transparent);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px 16px 100px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 8px;
+    padding: 20px 0;
+  }
+
+  .header .mountain-emoji {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 20px rgba(0, 229, 255, 0.6));
+  }
+
+  .header h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--neon-blue);
+    text-shadow:
+      0 0 10px rgba(0, 229, 255, 0.8),
+      0 0 40px rgba(0, 229, 255, 0.4),
+      0 0 80px rgba(0, 229, 255, 0.2);
+    letter-spacing: 2px;
+  }
+
+  .header .subtitle {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: var(--neon-pink);
+    margin-top: 12px;
+    text-shadow: 0 0 10px rgba(255, 45, 149, 0.8);
+    letter-spacing: 1px;
+    animation: flicker 3s infinite;
+  }
+
+  @keyframes flicker {
+    0%, 95%, 100% { opacity: 1; }
+    96% { opacity: 0.6; }
+    97% { opacity: 1; }
+    98% { opacity: 0.4; }
+  }
+
+  /* Scoreboard */
+  .scoreboard {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--card-bg);
+    border: 1px solid rgba(176, 38, 255, 0.3);
+    border-radius: 8px;
+  }
+
+  .score-item {
+    text-align: center;
+  }
+
+  .score-item .number {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 28px;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 15px rgba(255, 242, 0, 0.6);
+    display: block;
+  }
+
+  .score-item .label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 4px;
+  }
+
+  /* Room group */
+  .room-group {
+    margin-bottom: 20px;
+  }
+
+  .room-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: var(--neon-purple);
+    text-shadow: 0 0 10px rgba(176, 38, 255, 0.6);
+    margin-bottom: 10px;
+    padding-left: 4px;
+    letter-spacing: 2px;
+  }
+
+  /* Person card */
+  .person-card {
+    display: flex;
+    align-items: center;
+    background: var(--card-bg);
+    border: 1px solid rgba(176, 38, 255, 0.25);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .person-card:active {
+    transform: scale(0.97);
+  }
+
+  .person-card.checked-in {
+    border-color: var(--checked-in);
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.15), inset 0 0 15px rgba(0, 255, 136, 0.05);
+  }
+
+  .person-card .status-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid rgba(176, 38, 255, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    background: rgba(176, 38, 255, 0.1);
+  }
+
+  .person-card.checked-in .status-icon {
+    border-color: var(--checked-in);
+    background: rgba(0, 255, 136, 0.15);
+    box-shadow: 0 0 12px rgba(0, 255, 136, 0.3);
+  }
+
+  .person-card .info {
+    flex: 1;
+    margin-left: 14px;
+    overflow: hidden;
+  }
+
+  .person-card .name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .person-card.checked-in .name {
+    color: var(--checked-in);
+    text-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+  }
+
+  .person-card .check-time {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.35);
+    margin-top: 2px;
+  }
+
+  .person-card.checked-in .check-time {
+    color: rgba(0, 255, 136, 0.6);
+  }
+
+  .person-card .checkin-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    padding: 10px 14px;
+    border: 2px solid var(--neon-pink);
+    background: rgba(255, 45, 149, 0.15);
+    color: var(--neon-pink);
+    border-radius: 6px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .person-card .checkin-btn:active {
+    transform: scale(0.92);
+  }
+
+  .person-card .checkin-btn:hover {
+    background: rgba(255, 45, 149, 0.3);
+    box-shadow: 0 0 15px rgba(255, 45, 149, 0.4);
+  }
+
+  .person-card.checked-in .checkin-btn {
+    border-color: var(--checked-in);
+    background: rgba(0, 255, 136, 0.15);
+    color: var(--checked-in);
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+  }
+
+  /* Confetti canvas */
+  #confetti-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 999;
+    pointer-events: none;
+  }
+
+  /* All checked in celebration */
+  .celebration {
+    display: none;
+    text-align: center;
+    padding: 24px;
+    margin-bottom: 24px;
+    background: var(--card-bg);
+    border: 2px solid var(--neon-yellow);
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(255, 242, 0, 0.2);
+    animation: celebratePulse 2s ease-in-out infinite;
+  }
+
+  .celebration.active {
+    display: block;
+  }
+
+  @keyframes celebratePulse {
+    0%, 100% { box-shadow: 0 0 30px rgba(255, 242, 0, 0.2); }
+    50% { box-shadow: 0 0 50px rgba(255, 242, 0, 0.4); }
+  }
+
+  .celebration .big-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 20px rgba(255, 242, 0, 0.6);
+    line-height: 2;
+  }
+
+  /* Reset button */
+  .reset-zone {
+    text-align: center;
+    padding: 30px 0 20px;
+    border-top: 1px solid rgba(176, 38, 255, 0.15);
+    margin-top: 20px;
+  }
+
+  .reset-btn {
+    font-family: 'Russo One', sans-serif;
+    font-size: 12px;
+    padding: 10px 24px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover {
+    border-color: var(--neon-pink);
+    color: var(--neon-pink);
+  }
+
+  /* Sun */
+  .sun {
+    position: fixed;
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: linear-gradient(to bottom, var(--neon-yellow), var(--neon-pink));
+    opacity: 0.08;
+    z-index: 0;
+    filter: blur(2px);
+  }
+
+  .sun::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 50%;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 8px,
+      var(--dark-bg) 8px,
+      var(--dark-bg) 12px
+    );
+    clip-path: inset(50% 0 0 0);
+  }
+</style>
+</head>
+<body>
+
+<div class="sun"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<div class="container">
+  <div class="header">
+    <span class="mountain-emoji">🎿</span>
+    <h1>SKI DAY<br>CHECK-IN</h1>
+    <div class="subtitle">WAKE UP. GEAR UP. SHRED.</div>
+  </div>
+
+  <div class="scoreboard">
+    <div class="score-item">
+      <span class="number" id="checked-count">0</span>
+      <div class="label">Checked In</div>
+    </div>
+    <div class="score-item">
+      <span class="number" id="total-count">0</span>
+      <div class="label">Total</div>
+    </div>
+    <div class="score-item">
+      <span class="number" id="remaining-count">0</span>
+      <div class="label">MIA</div>
+    </div>
+  </div>
+
+  <div class="celebration" id="celebration">
+    <div class="big-text">
+      EVERYONE'S UP!<br>
+      🏔️ LET'S SHRED 🏔️
+    </div>
+  </div>
+
+  <div id="roster"></div>
+
+  <div class="reset-zone">
+    <button class="reset-btn" onclick="resetAll()">RESET ALL CHECK-INS</button>
+  </div>
+</div>
+
+<script>
+const ROSTER = [
+  { name: "Nick Wyman", room: 1 },
+  { name: "Tip Wyman", room: 1 },
+  { name: "Hunter Jorgensen", room: 2 },
+  { name: "Carl Gillberg", room: 2 },
+  { name: "McComb Dunwoody", room: 3 },
+  { name: "Nick Ogden", room: 3 },
+  { name: "Jared Dubey", room: 4 },
+  { name: "Danny Condon", room: 4 },
+  { name: "Tyler Morgan", room: 5 },
+  { name: "Avery Henderson", room: 5 },
+  { name: "Bart Helfet", room: 6 },
+  { name: "Drew Fink", room: 6 },
+];
+
+const STORAGE_KEY = "ski-day-checkins";
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch { return {}; }
+}
+
+function saveState(state) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function getState() {
+  return loadState();
+}
+
+function toggleCheckin(name) {
+  const state = getState();
+  if (state[name]) {
+    delete state[name];
+  } else {
+    state[name] = { time: Date.now() };
+  }
+  saveState(state);
+  render();
+
+  // Check if everyone is checked in
+  const checkedCount = ROSTER.filter(p => state[p.name]).length;
+  if (checkedCount === ROSTER.length) {
+    launchConfetti();
+  }
+}
+
+function formatTime(ts) {
+  const d = new Date(ts);
+  let h = d.getHours();
+  const m = d.getMinutes().toString().padStart(2, '0');
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${m} ${ampm}`;
+}
+
+function render() {
+  const state = getState();
+  const rosterEl = document.getElementById("roster");
+  const rooms = {};
+
+  ROSTER.forEach(p => {
+    if (!rooms[p.room]) rooms[p.room] = [];
+    rooms[p.room].push(p);
+  });
+
+  let html = '';
+  const sortedRooms = Object.keys(rooms).sort((a, b) => a - b);
+
+  sortedRooms.forEach(room => {
+    html += `<div class="room-group">`;
+    html += `<div class="room-label">ROOM ${room}</div>`;
+    rooms[room].forEach(person => {
+      const isChecked = !!state[person.name];
+      const checkedClass = isChecked ? 'checked-in' : '';
+      const icon = isChecked ? '✓' : '💤';
+      const btnText = isChecked ? 'I\'M UP!' : 'CHECK IN';
+      const timeStr = isChecked ? `Checked in at ${formatTime(state[person.name].time)}` : 'Still in bed...';
+
+      html += `
+        <div class="person-card ${checkedClass}" onclick="toggleCheckin('${person.name.replace(/'/g, "\\'")}')">
+          <div class="status-icon">${icon}</div>
+          <div class="info">
+            <div class="name">${person.name}</div>
+            <div class="check-time">${timeStr}</div>
+          </div>
+          <button class="checkin-btn" onclick="event.stopPropagation(); toggleCheckin('${person.name.replace(/'/g, "\\'")}')">${btnText}</button>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+
+  rosterEl.innerHTML = html;
+
+  // Update scoreboard
+  const checkedCount = ROSTER.filter(p => state[p.name]).length;
+  document.getElementById("checked-count").textContent = checkedCount;
+  document.getElementById("total-count").textContent = ROSTER.length;
+  document.getElementById("remaining-count").textContent = ROSTER.length - checkedCount;
+
+  // Celebration
+  const celebEl = document.getElementById("celebration");
+  if (checkedCount === ROSTER.length) {
+    celebEl.classList.add("active");
+  } else {
+    celebEl.classList.remove("active");
+  }
+}
+
+function resetAll() {
+  if (confirm("Reset all check-ins? Everyone goes back to bed.")) {
+    localStorage.removeItem(STORAGE_KEY);
+    render();
+  }
+}
+
+// Confetti
+function launchConfetti() {
+  const canvas = document.getElementById("confetti-canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const pieces = [];
+  const colors = ['#ff2d95', '#00e5ff', '#b026ff', '#fff200', '#00ff88', '#ff6b35'];
+
+  for (let i = 0; i < 150; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 10 + 5,
+      h: Math.random() * 6 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vy: Math.random() * 3 + 2,
+      vx: (Math.random() - 0.5) * 2,
+      rot: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 10,
+      opacity: 1,
+    });
+  }
+
+  let frame = 0;
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    frame++;
+
+    pieces.forEach(p => {
+      p.y += p.vy;
+      p.x += p.vx;
+      p.rot += p.rotSpeed;
+      if (frame > 120) p.opacity -= 0.015;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate((p.rot * Math.PI) / 180);
+      ctx.globalAlpha = Math.max(0, p.opacity);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+
+    if (frame < 200 && pieces.some(p => p.opacity > 0)) {
+      requestAnimationFrame(animate);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+  animate();
+}
+
+window.addEventListener("resize", () => {
+  const canvas = document.getElementById("confetti-canvas");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+
+// Initial render
+render();
+</script>
+</body>
+</html>
