@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BCH Gala – Seating</title>
+<style>
+  :root {
+    --bg: #faf7f2;
+    --ink: #1a1a1a;
+    --muted: #6b6b6b;
+    --line: #d9d3c7;
+    --card: #ffffff;
+    --accent: #8a2432;
+    --accent-soft: #f3e4e6;
+    --table: #8a2432;
+    --seat-empty: #ffffff;
+    --seat-filled: #fdf6e6;
+    --seat-border: #8a2432;
+    --ghost: rgba(138, 36, 50, 0.18);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    font-family: Georgia, 'Times New Roman', serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+  }
+
+  body {
+    padding: 24px 16px 48px;
+  }
+
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  header h1 {
+    font-size: 28px;
+    letter-spacing: 1px;
+    font-weight: normal;
+  }
+
+  header .sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 16px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+  }
+
+  .btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+  .btn.primary {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .btn.primary:hover { opacity: 0.9; background: var(--accent); }
+
+  main {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  @media (max-width: 820px) {
+    main { grid-template-columns: 1fr; }
+  }
+
+  /* ---- Table ---- */
+
+  .table-wrap {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px 16px;
+    position: relative;
+  }
+
+  .stage {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--muted);
+    padding: 6px 0 4px;
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    margin: 0 auto 16px;
+    max-width: 240px;
+  }
+
+  .table-stage-arrow {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+
+  .table {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto;
+  }
+
+  .table-disc {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 48%;
+    height: 48%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #a33143, var(--table) 60%, #6b1a26);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15), inset 0 2px 8px rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .seat {
+    position: absolute;
+    width: 110px;
+    height: 86px;
+    transform: translate(-50%, -50%);
+    background: var(--seat-empty);
+    border: 1.5px solid var(--seat-border);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 8px;
+    text-align: center;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: box-shadow 0.15s, transform 0.08s, background 0.15s;
+  }
+
+  .seat.filled { background: var(--seat-filled); }
+
+  .seat.drag-over {
+    box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 4px var(--accent);
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+
+  .seat:active { cursor: grabbing; }
+
+  .seat .seat-num {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .seat .seat-name {
+    font-size: 13px;
+    line-height: 1.15;
+    margin-top: 3px;
+    font-weight: bold;
+    word-wrap: break-word;
+    max-width: 100%;
+  }
+
+  .seat.empty .seat-name {
+    font-weight: normal;
+    color: var(--muted);
+    font-style: italic;
+    font-size: 12px;
+  }
+
+  @media (max-width: 520px) {
+    .seat { width: 88px; height: 72px; }
+    .seat .seat-name { font-size: 11px; }
+  }
+
+  /* ---- Roster ---- */
+
+  .roster {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px;
+    min-height: 300px;
+  }
+
+  .roster h2 {
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-weight: normal;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+  }
+
+  .roster-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 60px;
+  }
+
+  .roster-list.drag-over {
+    background: var(--accent-soft);
+    border-radius: 6px;
+    outline: 2px dashed var(--accent);
+    outline-offset: 4px;
+  }
+
+  .guest {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 14px;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background 0.15s, transform 0.08s;
+  }
+
+  .guest:hover { background: var(--accent-soft); }
+  .guest:active { cursor: grabbing; }
+
+  .roster-empty {
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  /* ---- Drag ghost ---- */
+
+  .drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    background: var(--accent);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    transform: translate(-50%, -50%);
+    opacity: 0.96;
+    white-space: nowrap;
+  }
+
+  .dragging-src { opacity: 0.3 !important; }
+
+  /* ---- Print ---- */
+  @media print {
+    body { background: white; padding: 0; }
+    .toolbar, .roster { display: none; }
+    main { grid-template-columns: 1fr; }
+    .table-wrap { border: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>BCH Gala — Seating</h1>
+    <div class="sub">Char &amp; Nick Wyman Party · Table of 10</div>
+  </header>
+
+  <div class="toolbar">
+    <button class="btn" id="add-btn">+ Add guest</button>
+    <button class="btn" id="print-btn">Print</button>
+    <button class="btn" id="reset-btn">Clear seats</button>
+  </div>
+
+  <main>
+    <div class="table-wrap">
+      <div class="stage">STAGE</div>
+      <div class="table-stage-arrow">▲ stage is above seat 1</div>
+      <div class="table" id="table">
+        <div class="table-disc">BCH GALA</div>
+      </div>
+    </div>
+
+    <aside class="roster">
+      <h2>Unseated guests</h2>
+      <div class="roster-list" id="roster-list"></div>
+    </aside>
+  </main>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const STORAGE_KEY = 'bch-gala-seating-v1';
+
+  const DEFAULT_GUESTS = [
+    'Condon, Danny',
+    'Condon, Jacquelyn',
+    'Fink, Dani',
+    'Fink, Drew',
+    'Grabowsky, Eduardo',
+    'Grabowsky, Raquel',
+    'Levine, Jane',
+    'Levine, Phillip',
+    'Wyman, Char',
+    'Wyman, Nick',
+  ];
+
+  const SEAT_COUNT = 10;
+
+  /** state = { seats: { 1: "name"|null, ... }, guests: [...all guests...] } */
+  let state = load() || {
+    seats: Object.fromEntries(Array.from({ length: SEAT_COUNT }, (_, i) => [i + 1, null])),
+    guests: DEFAULT_GUESTS.slice(),
+  };
+
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed.seats || !parsed.guests) return null;
+      return parsed;
+    } catch (e) { return null; }
+  }
+
+  function seatedNames() {
+    return new Set(Object.values(state.seats).filter(Boolean));
+  }
+
+  function unseatedGuests() {
+    const seated = seatedNames();
+    return state.guests.filter(g => !seated.has(g));
+  }
+
+  // ── Seat positions around a circle ──
+  // Seat 1 at top (12 o'clock, nearest stage), going clockwise.
+  function seatPosition(seatNum) {
+    const angle = ((seatNum - 1) / SEAT_COUNT) * 2 * Math.PI - Math.PI / 2;
+    const radiusPct = 40; // % from center
+    const x = 50 + radiusPct * Math.cos(angle);
+    const y = 50 + radiusPct * Math.sin(angle);
+    return { x, y };
+  }
+
+  // ── Rendering ──
+
+  const tableEl = document.getElementById('table');
+  const rosterListEl = document.getElementById('roster-list');
+
+  function render() {
+    // Seats
+    const existingSeats = tableEl.querySelectorAll('.seat');
+    existingSeats.forEach(s => s.remove());
+
+    for (let i = 1; i <= SEAT_COUNT; i++) {
+      const { x, y } = seatPosition(i);
+      const name = state.seats[i];
+      const seatEl = document.createElement('div');
+      seatEl.className = 'seat ' + (name ? 'filled' : 'empty');
+      seatEl.dataset.seat = i;
+      seatEl.dataset.type = 'seat';
+      if (name) seatEl.dataset.guest = name;
+      seatEl.style.left = x + '%';
+      seatEl.style.top = y + '%';
+      seatEl.innerHTML = `
+        <div class="seat-num">Seat ${i}</div>
+        <div class="seat-name">${name ? escapeHtml(name) : 'empty'}</div>
+      `;
+      tableEl.appendChild(seatEl);
+    }
+
+    // Roster
+    rosterListEl.innerHTML = '';
+    const unseated = unseatedGuests();
+    if (unseated.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'roster-empty';
+      empty.textContent = 'All guests are seated.';
+      rosterListEl.appendChild(empty);
+    } else {
+      unseated.forEach(name => {
+        const el = document.createElement('div');
+        el.className = 'guest';
+        el.dataset.type = 'guest';
+        el.dataset.guest = name;
+        el.textContent = name;
+        rosterListEl.appendChild(el);
+      });
+    }
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  // ── Drag & drop (pointer events) ──
+
+  let drag = null; // { name, sourceType, sourceSeat, ghostEl, pointerId }
+
+  function onPointerDown(e) {
+    // Only primary button / primary touch
+    if (e.button !== undefined && e.button !== 0) return;
+    const target = e.target.closest('[data-type]');
+    if (!target) return;
+
+    let name = null;
+    let sourceType = target.dataset.type;
+    let sourceSeat = null;
+
+    if (sourceType === 'guest') {
+      name = target.dataset.guest;
+    } else if (sourceType === 'seat') {
+      if (!target.dataset.guest) return; // empty seat — nothing to drag
+      name = target.dataset.guest;
+      sourceSeat = Number(target.dataset.seat);
+    } else {
+      return;
+    }
+
+    e.preventDefault();
+    target.setPointerCapture?.(e.pointerId);
+
+    const ghost = document.createElement('div');
+    ghost.className = 'drag-ghost';
+    ghost.textContent = name;
+    ghost.style.left = e.clientX + 'px';
+    ghost.style.top = e.clientY + 'px';
+    document.body.appendChild(ghost);
+
+    target.classList.add('dragging-src');
+
+    drag = {
+      name,
+      sourceType,
+      sourceSeat,
+      sourceEl: target,
+      ghostEl: ghost,
+      pointerId: e.pointerId,
+    };
+
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
+    document.addEventListener('pointercancel', onPointerUp);
+  }
+
+  function onPointerMove(e) {
+    if (!drag) return;
+    drag.ghostEl.style.left = e.clientX + 'px';
+    drag.ghostEl.style.top = e.clientY + 'px';
+
+    // Highlight drop target
+    drag.ghostEl.style.visibility = 'hidden';
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    drag.ghostEl.style.visibility = '';
+
+    clearDragOver();
+    const dropTarget = findDropTarget(under);
+    if (dropTarget) dropTarget.classList.add('drag-over');
+  }
+
+  function onPointerUp(e) {
+    if (!drag) return;
+
+    drag.ghostEl.style.visibility = 'hidden';
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    drag.ghostEl.style.visibility = '';
+
+    const dropTarget = findDropTarget(under);
+    handleDrop(dropTarget);
+
+    cleanupDrag();
+  }
+
+  function findDropTarget(el) {
+    if (!el) return null;
+    const seat = el.closest('.seat');
+    if (seat) return seat;
+    const roster = el.closest('#roster-list, .roster');
+    if (roster) return rosterListEl;
+    return null;
+  }
+
+  function clearDragOver() {
+    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+  }
+
+  function cleanupDrag() {
+    if (!drag) return;
+    drag.ghostEl.remove();
+    drag.sourceEl.classList.remove('dragging-src');
+    clearDragOver();
+    document.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', onPointerUp);
+    document.removeEventListener('pointercancel', onPointerUp);
+    drag = null;
+  }
+
+  function handleDrop(target) {
+    if (!target) return; // snap back, no change
+
+    if (target === rosterListEl) {
+      // Moved back to roster: unseat if from a seat
+      if (drag.sourceType === 'seat') {
+        state.seats[drag.sourceSeat] = null;
+        save();
+        render();
+      }
+      return;
+    }
+
+    // Target is a seat
+    const destSeat = Number(target.dataset.seat);
+    const destOccupant = state.seats[destSeat];
+
+    if (drag.sourceType === 'guest') {
+      // From roster → seat. If seat occupied, bump current occupant back to roster.
+      state.seats[destSeat] = drag.name;
+    } else if (drag.sourceType === 'seat') {
+      // Swap seats (or move if dest empty)
+      if (destSeat === drag.sourceSeat) return; // same seat, nothing
+      state.seats[drag.sourceSeat] = destOccupant; // may be null → move, or swap
+      state.seats[destSeat] = drag.name;
+    }
+    save();
+    render();
+  }
+
+  // ── Buttons ──
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    if (!confirm('Clear all seats? Guests stay in the roster.')) return;
+    for (let i = 1; i <= SEAT_COUNT; i++) state.seats[i] = null;
+    save();
+    render();
+  });
+
+  document.getElementById('print-btn').addEventListener('click', () => window.print());
+
+  document.getElementById('add-btn').addEventListener('click', () => {
+    const name = prompt('Add guest (format: "Last, First")');
+    if (!name) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    if (state.guests.includes(trimmed)) {
+      alert('That guest is already on the list.');
+      return;
+    }
+    state.guests.push(trimmed);
+    save();
+    render();
+  });
+
+  // Dbl-click / long-press a roster guest to remove. Keep it simple: right-click or dbl-click.
+  rosterListEl.addEventListener('dblclick', (e) => {
+    const guestEl = e.target.closest('.guest');
+    if (!guestEl) return;
+    const name = guestEl.dataset.guest;
+    if (confirm(`Remove ${name} from the guest list?`)) {
+      state.guests = state.guests.filter(g => g !== name);
+      save();
+      render();
+    }
+  });
+
+  // ── Boot ──
+  document.addEventListener('pointerdown', onPointerDown);
+  render();
+})();
+</script>
+</body>
+</html>
